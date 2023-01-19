@@ -4,7 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Jobs\CountFibonacci;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use App\Models\Fibonacci;
 
 class FibonacciController extends Controller
 {
@@ -15,7 +17,7 @@ class FibonacciController extends Controller
      */
     public function index()
     {
-        //
+        return response()->json(["data" => DB::table('jobs')->get()]);
     }
 
     /**
@@ -29,19 +31,22 @@ class FibonacciController extends Controller
         $validator = Validator::make(
             $request->all(),
             [
-                'title' => 'required|string|max:225',
-                'body' => 'required',
+                'number' => 'required|numeric|min:1',
             ]
         );
 
         if ($validator->fails()) {
             return $validator->errors()->all();
         }
-
-        $validatedData = $validator->validated();
-
-        CountFibonacci::dispatch($validatedData);
-        return response()->json(['message' => 'post has been sent']);
+        $fibonacciData = Fibonacci::create([
+            "number" => $request->number,
+            "status" => "pending",
+            "result" => 0,
+        ]);
+        $job = new CountFibonacci($fibonacciData);
+        // CountFibonacci::dispatch($validatedData);
+        $this->dispatch($job);
+        return response()->json(['message' => $fibonacciData->id]);
     }
 
     /**
@@ -52,29 +57,7 @@ class FibonacciController extends Controller
      */
     public function show($id)
     {
-        //
+        return response()->json(["data" => DB::table('fibonaccis')->where('id', $id)->first()]);
     }
-
-    /**
-     * Update the specified resource in storage.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function update(Request $request, $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function destroy($id)
-    {
-        //
-    }
+    
 }

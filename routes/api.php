@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FibonacciController;
+use Illuminate\Support\Facades\DB;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,4 +19,12 @@ use App\Http\Controllers\FibonacciController;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-Route::post('/post',[ FibonacciController::class,'store']);
+
+//add in queue
+Route::post('/fibonacci',[ FibonacciController::class,'store']);
+
+//get all jobs
+Route::get('/fibonacci',[ FibonacciController::class,'index']);
+
+//get result by id
+Route::get('/fibonacci/{id}',[ FibonacciController::class,'show']);

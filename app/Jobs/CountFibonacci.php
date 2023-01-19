@@ -3,24 +3,24 @@
 namespace App\Jobs;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use App\Models\Fibonacci;
 
 class CountFibonacci implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    protected $validatedData;
+    protected $validatedData, $result, $arr = [];
 
     /**
      * Create a new job instance.
      *
      * @return void
      */
-    public function __construct($validatedData)
+    public function __construct(Fibonacci $validatedData)
     {
         $this->validatedData = $validatedData;
     }
@@ -32,18 +32,24 @@ class CountFibonacci implements ShouldQueue
      */
     public function handle()
     {
-        $response = Http::post('https://jsonplaceholder.typicode.com/posts', [
-            'title' => $this->validatedData['title'],
-            'body' => $this->validatedData['body'],
+        $fibonacci = $this->validatedData;
+        $result = $this->fibonacciRecursion($fibonacci->number);
+        $fibonacci->update([
+            'result' => $result,
+            'status' => "successed"
         ]);
+    }
 
-        if ($response->failed()) {
-
-            //now()->addSeconds(15 * $this->attempts());
-            // The attempts() method returns the number of times the job
-            // has been attempted. If it's the first run, attempts() will return 1.
-
-            throw new RuntimeException("Failed to connect ", $response->status());
-        }
+    /**
+     *  fibonacci formula recursion
+     *  @param int
+     *  @return int
+     */
+    protected function fibonacciRecursion($index){
+        if(array_key_exists($index,$this->arr)) return $this->arr[$index];
+        if($index === 2 || $index === 1) return 1;
+        $sum = $this->fibonacciRecursion($index - 2) + $this->fibonacciRecursion($index - 1);
+        $this->arr[$index]  = $sum;
+        return $sum;
     }
 }
